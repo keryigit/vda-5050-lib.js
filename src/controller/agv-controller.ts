@@ -903,7 +903,6 @@ export class AgvController extends AgvClient {
      */
     get hasActiveOrder() {
         return this._currentState.nodeStates.length > 0 ||
-            this._currentState.edgeStates.length > 0 ||
             this._currentState.actionStates.some(s =>
                 !this.isInstantActionState(s) &&
                 s.actionStatus !== ActionStatus.Failed &&
