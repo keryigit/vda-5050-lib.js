@@ -2335,6 +2335,16 @@ export class AgvController extends AgvClient {
         }
     }
 
+    executePassiveInstantActions(actions: Action[]) {
+        this.debug("Invoking executePassiveInstantActions with local actions %o", actions);
+        const afterAction = this._currentInstantActions[this._currentInstantActions.length - 1];
+        const hasPendingHardAction = this._currentInstantActions.some(a => a.blockingType === BlockingType.Hard);
+        this._currentInstantActions.push(...actions.filter(a => this._checkInstantActionExecutable(a)));
+        if (!hasPendingHardAction) {
+            this._processInstantActionChunk(afterAction, afterAction !== undefined);
+        }
+    }
+
     private _processInstantActions(actions: InstantActions) {
         // Check whether InstantActions object is well-formed.
         try {
