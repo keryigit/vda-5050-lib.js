@@ -1084,6 +1084,22 @@ export class AgvController extends AgvClient {
         this._updateState(this._cloneState(newState), reportImmediately);
     }
 
+    /**
+     * Can be invoked manually to start a 'passive' InstantAction, i.e. an action
+     * which was not commanded from the master, but for which you still want to receive a feedback.
+     *
+     * @param actions partial state properties that have changed
+     */
+    executePassiveInstantActions(actions: Action[]) {
+        this.debug("Invoking executePassiveInstantActions with local actions %o", actions);
+        const afterAction = this._currentInstantActions[this._currentInstantActions.length - 1];
+        const hasPendingHardAction = this._currentInstantActions.some(a => a.blockingType === BlockingType.Hard);
+        this._currentInstantActions.push(...actions.filter(a => this._checkInstantActionExecutable(a)));
+        if (!hasPendingHardAction) {
+            this._processInstantActionChunk(afterAction, afterAction !== undefined);
+        }
+    }
+
     protected async onStarted() {
         await super.onStarted();
         this._attachAdapter();
@@ -2331,16 +2347,6 @@ export class AgvController extends AgvClient {
                 this.debug("Invoking finishEdgeAction handler with context %o", context);
                 this._agvAdapter.finishEdgeAction(context);
             }
-        }
-    }
-
-    executePassiveInstantActions(actions: Action[]) {
-        this.debug("Invoking executePassiveInstantActions with local actions %o", actions);
-        const afterAction = this._currentInstantActions[this._currentInstantActions.length - 1];
-        const hasPendingHardAction = this._currentInstantActions.some(a => a.blockingType === BlockingType.Hard);
-        this._currentInstantActions.push(...actions.filter(a => this._checkInstantActionExecutable(a)));
-        if (!hasPendingHardAction) {
-            this._processInstantActionChunk(afterAction, afterAction !== undefined);
         }
     }
 
