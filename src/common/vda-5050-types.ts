@@ -1236,6 +1236,9 @@ export interface State {
      * Optional: If the AGV does not use zones, this field can be omitted.
      */
     zoneSetId?: string;
+
+    /** Planned trajectory of an automously guided vehicle */
+    plannedTrajectory?: Trajectory;
 }
 
 export interface ActionState {
