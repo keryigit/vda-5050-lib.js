@@ -974,6 +974,9 @@ export enum OrientationType {
  * The trajectory is to be communicated as a NURBS and is defined in chapter 6.4.
  * Trajectory segments are from the point where the AGV starts to enter the edge until the
  * point where it reports that the next node was traversed.
+ *
+ * Planned trajectory to the goal position, dopes not define the actual executed movement of
+ * the vehicle, for traffic management purposes
  */
 export interface Trajectory {
     /**
@@ -1228,6 +1231,10 @@ export interface State {
      */
     paused?: boolean;
     /**
+     * Zone information sent by the vehicle to MC
+     */
+    plannedTrajectory?: PlannedTrajectory;
+    /**
      * Object that holds information about the safety status
      */
     safetyState: SafetyStatus;
@@ -1241,9 +1248,6 @@ export interface State {
      * Optional: If the AGV does not use zones, this field can be omitted.
      */
     zoneSetId?: string;
-
-    /** Planned trajectory of an automously guided vehicle */
-    plannedTrajectory?: Trajectory;
 }
 
 export interface ActionState {
@@ -1622,6 +1626,17 @@ export enum OperatingMode {
     Semiautomatic = "SEMIAUTOMATIC",
     Service = "SERVICE",
     Teachin = "TEACHIN",
+}
+
+/**
+ * Zone information sent by the vehicle to MC
+ */
+export interface PlannedTrajectory {
+    /**
+     * Planned trajectory to the goal position, dopes not define the actual executed movement of
+     * the vehicle, for traffic management purposes
+     */
+    trajectory: Trajectory;
 }
 
 /**
