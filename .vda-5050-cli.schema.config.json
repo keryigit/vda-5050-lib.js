@@ -7,7 +7,7 @@
         "To regenerate the file, use the vda-5050-cli tool.",
         "----------------------------------------------------------------------------"
     ],
-    "schema": "./custom_schemas/*.schema.json",
+    "schema": "./vda5050-2.0-schemas/*.schema.json",
     "langOptions": {
         "just-types": true
     }
