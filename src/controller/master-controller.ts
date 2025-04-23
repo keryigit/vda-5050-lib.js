@@ -185,6 +185,28 @@ export interface OrderEventHandler {
      * @param context context information of the order event
      */
     onActionStateChanged?(actionState: ActionState, withError: Error, action: Action, target: Node | Edge, context: OrderContext): void;
+
+    /**
+     * Invoked whenever a new state update is received from the AGV for the current order.
+     * 
+     * @remarks
+     * This callback is triggered each time the AGV sends a state update related to the
+     * current order. It provides real-time feedback on the order's execution, including
+     * the AGV's current position, status, and any changes in the order's progress.
+     * 
+     * The frequency of this callback invocation depends on how often the AGV sends
+     * state updates, which can vary based on the AGV's configuration and the complexity
+     * of the current task.
+     * 
+     * This callback is useful for applications that need to monitor the order's progress
+     * in real-time, update user interfaces, or make dynamic decisions based on the
+     * AGV's current state.
+     * 
+     * @param context The current OrderContext, providing the latest state
+     * information directly from the AGV, including the original order details
+     * and the AGV's current state.
+     */
+    onStateUpdate?(context: OrderContext): void;
 }
 
 /**
@@ -396,8 +418,14 @@ export class MasterController extends MasterControlClient {
             this._currentInstantActions.set(agvId, actionStateCaches = new Map());
         }
         const newInstantActionsRef = this._currentInstantActionsRef === undefined ? 1 : this._currentInstantActionsRef + 1;
-        instantActions.instantActions.forEach(action => actionStateCaches.set(action.actionId,
-            { agvId, action, eventHandler, instantActionsRef: newInstantActionsRef }));
+
+        if (this.clientOptions.vdaVersion === "1.1.0") {
+            instantActions.instantActions.forEach(action => actionStateCaches.set(action.actionId,
+                { agvId, action, eventHandler, instantActionsRef: newInstantActionsRef }));
+        } else {
+            instantActions.actions.forEach(action => actionStateCaches.set(action.actionId,
+                { agvId, action, eventHandler, instantActionsRef: newInstantActionsRef }));
+        }
 
         try {
             const actionsWithHeader = await this.publish(Topic.InstantActions, agvId, instantActions);
@@ -406,7 +434,13 @@ export class MasterController extends MasterControlClient {
             return actionsWithHeader;
         } catch (error) {
             this.debug("Error initiating instant actions %o on AGV %o: %s", instantActions, agvId, error.message ?? error);
-            instantActions.instantActions.forEach(action => actionStateCaches.delete(action.actionId));
+
+            if (this.clientOptions.vdaVersion === "1.1.0") {
+                instantActions.instantActions.forEach(action => actionStateCaches.delete(action.actionId));
+            } else {
+                instantActions.actions.forEach(action => actionStateCaches.delete(action.actionId));
+            }
+
             if (actionStateCaches.size === 0) {
                 this._currentInstantActions.delete(agvId);
             }
@@ -479,6 +513,9 @@ export class MasterController extends MasterControlClient {
                 // To prevent such cases, it is recommended to always validate
                 // outbound topic objects with master controller client option
                 // "topicObjectValidation" (default is true).
+            } else if (orderId === undefined) {
+                // In case that there are no orderId in the error references, get the last assigned order from cache
+                cache = this._getLastAssignedOrderStateCache(agvId);
             }
             if (cache !== undefined) {
                 // Clear cache entry to support follow-up assignment of an order
@@ -701,6 +738,10 @@ export class MasterController extends MasterControlClient {
             cache.isOrderProcessedHandlerInvoked = true;
             cache.eventHandler.onOrderProcessed(undefined, byCancelation, isActive, { order: cache.order, agvId: cache.agvId, state });
             return;
+        } else {
+            if (cache.eventHandler.onStateUpdate) {
+                cache.eventHandler.onStateUpdate({ order: cache.order, agvId: cache.agvId, state });
+            }
         }
     }
 
