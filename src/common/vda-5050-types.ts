@@ -1310,9 +1310,9 @@ export interface State {
      */
     paused?: boolean;
     /**
-     * Zone information sent by the vehicle to MC
+     * Represents the estimated time of arrival at closer waypoints that the vehicle is able to perceive with its sensors.
      */
-    plannedTrajectory?: PlannedTrajectory;
+    intermediatePath?: IntermediatePath;
     /**
      * Object that holds information about the safety status
      */
@@ -1712,14 +1712,39 @@ export enum OperatingMode {
 }
 
 /**
- * Zone information sent by the vehicle to MC
+ * Planned trajectory to the goal position, dopes not define the actual executed movement of
+ * the vehicle, for traffic management purposes
  */
-export interface PlannedTrajectory {
+export interface IntermediatePath {
     /**
-     * Planned trajectory to the goal position, dopes not define the actual executed movement of
-     * the vehicle, for traffic management purposes
+     * Array of end points of segments of a polyline.
      */
-    trajectory: Trajectory;
+    polyline: Waypoint[];
+}
+
+/**
+ * Endpoint of a segment within a defined polyline.
+ */
+export interface Waypoint {
+    /** 
+     * X-coordinate described in the project-specific coordinate system.
+     */
+    x: number;
+    /** 
+     * Y-coordinate described in the project-specific coordinate system.
+     */
+    y: number;
+    /** 
+     * Absolute orientation of the vehicle in the project-specific coordinate system.
+     * Range: [-Pi ... Pi]
+     */
+    theta?: number;
+    /** 
+     * Estimated time of arrival/traversal. 
+     * ETA is formatted as a timestamp (ISO 8601, UTC); YYYY-MM-DDTHH:mm:ss.ffZ 
+     * (e.g., "2017-04-15T11:40:03.12Z").
+     */
+    ETA: string;
 }
 
 /**
