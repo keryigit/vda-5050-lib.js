@@ -1316,6 +1316,12 @@ export interface State {
      */
     plannedPath?: PlannedPath;
     /**
+     * Near-term local path as a polyline of waypoints with ETAs. Starts from the current
+     * robot position. Updated with every state/visualization message by freely-navigating
+     * mobile robots. See VDA5050 3.0 §6.8.
+     */
+    intermediatePath?: IntermediatePath;
+    /**
      * Object that holds information about the safety status
      */
     safetyState: SafetyStatus;
@@ -1734,10 +1740,10 @@ export interface PlannedPath {
  * waypoints with per-waypoint ETAs. Starts from the current robot position.
  * See VDA5050 3.0 §6.8.
  */
-export interface PlannedTrajectory {
+export interface IntermediatePath {
     /**
-     * Planned trajectory to the goal position, dopes not define the actual executed movement of
-     * the vehicle, for traffic management purposes
+     * Ordered list of waypoints describing the near-term path. First waypoint is the
+     * robot's current position.
      */
     polyline: Waypoint[];
 }
