@@ -406,7 +406,7 @@ export abstract class Client {
     private _isStarted: boolean;
     private _isStopping: boolean;
     private _connectionState: "online" | "offline" | "broken";
-    private _connectionStateChangeCallback: ConnectionStateChangeCallback;
+    private _connectionStateChangeCallbacks: ConnectionStateChangeCallback[] = [];
     private readonly _clientOptions: ClientOptions;
     private readonly _headerIds: Map<string, number>;
     private readonly _subscriptionManager: SubscriptionManager;
@@ -583,7 +583,7 @@ export abstract class Client {
      * @param callback a callback function
      */
     registerConnectionStateChange(callback: ConnectionStateChangeCallback) {
-        this._connectionStateChangeCallback = callback;
+        this._connectionStateChangeCallbacks.push(callback);
         this._emitConnectionStateChange(this._connectionState);
     }
 
@@ -1225,8 +1225,8 @@ export abstract class Client {
     private _emitConnectionStateChange(connectionState: "online" | "offline" | "broken") {
         const previousConnectionState = this._connectionState;
         this._connectionState = connectionState;
-        if (this._connectionStateChangeCallback) {
-            this._connectionStateChangeCallback(connectionState, previousConnectionState);
+        for (const cb of this._connectionStateChangeCallbacks) {
+            cb(connectionState, previousConnectionState);
         }
     }
 
