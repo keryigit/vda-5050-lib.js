@@ -1310,9 +1310,11 @@ export interface State {
      */
     paused?: boolean;
     /**
-     * Zone information sent by the vehicle to MC
+     * Global planned path communicated as a NURBS. Shall at least cover the current base.
+     * Starts from the current robot position. Freely-navigating mobile robots shall send
+     * this together with intermediatePath. See VDA5050 3.0 §6.8.
      */
-    plannedTrajectory?: PlannedTrajectory;
+    plannedPath?: PlannedPath;
     /**
      * Object that holds information about the safety status
      */
@@ -1712,14 +1714,55 @@ export enum OperatingMode {
 }
 
 /**
- * Zone information sent by the vehicle to MC
+ * Global planned path shared by a freely-navigating mobile robot, expressed as a NURBS.
+ * Starts from the current robot position and shall at least cover the current base.
+ * See VDA5050 3.0 §6.8.
+ */
+export interface PlannedPath {
+    /**
+     * NURBS describing the planned path. First control point is the robot's current position.
+     */
+    trajectory: Trajectory;
+    /**
+     * Optional list of nodeIds (from the current order) that are traversed by this path.
+     */
+    traversedNodes?: string[];
+}
+
+/**
+ * Near-term local path of a freely-navigating mobile robot, expressed as a polyline of
+ * waypoints with per-waypoint ETAs. Starts from the current robot position.
+ * See VDA5050 3.0 §6.8.
  */
 export interface PlannedTrajectory {
     /**
      * Planned trajectory to the goal position, dopes not define the actual executed movement of
      * the vehicle, for traffic management purposes
      */
-    trajectory: Trajectory;
+    polyline: Waypoint[];
+}
+
+/**
+ * Endpoint of a segment within a defined polyline.
+ */
+export interface Waypoint {
+    /** 
+     * X-coordinate described in the project-specific coordinate system.
+     */
+    x: number;
+    /** 
+     * Y-coordinate described in the project-specific coordinate system.
+     */
+    y: number;
+    /** 
+     * Absolute orientation of the vehicle in the project-specific coordinate system.
+     * Range: [-Pi ... Pi]
+     */
+    theta?: number;
+    /**
+     * Estimated time of arrival at this waypoint as ISO 8601 UTC timestamp.
+     */
+    eta?: string;
 }
 
 /**
